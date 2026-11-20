@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planner da Meri · até 06/02/2027</title>
+<link rel="manifest" href="./manifest.webmanifest"><meta name="theme-color" content="#7c9a7a"><link rel="icon" href="./icon-192.png"><link rel="apple-touch-icon" href="./icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Planner">
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--tx:#2f3a2f;--mut:#6b7a6a;--ln:#e4dccb;--L:#6f9a6d;--I:#8f86c4;--P:#e08e79;--R:#5f7f5d;--ac:#5f7f5d;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d231d;--card:#272f27;--tx:#ece8dc;--mut:#a3b0a1;--ln:#3a463a;--L:#9cbb99;--I:#aaa2db;--P:#eaa592;--R:#9cbb99;--ac:#9cbb99;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d231d;--card:#272f27;--tx:#ece8dc;--mut:#a3b0a1;--ln:#3a463a;--L:#9cbb99;--I:#aaa2db;--P:#eaa592;--R:#9cbb99;--ac:#9cbb99;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:12px 14px 90px}
+h1{font:600 22px Georgia,serif;margin:10px 0 2px}h3{font:600 16px Georgia,serif;margin:0 0 8px}
+small{display:block;color:var(--mut);font-size:13px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:14px;margin:10px 0}
+.row{display:flex;gap:14px;align-items:center}.sp{justify-content:space-between}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}.nav>div{text-align:center;flex:1}
+button,select,textarea{font:inherit;color:inherit}
+button{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;cursor:pointer}
+button:active{transform:scale(.97)}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--ln);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+.tabs button{flex:1;border:0;background:none;font-size:12px;padding:8px 2px;border-radius:10px}.tabs button.on{background:var(--ln);font-weight:700}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--ln);cursor:pointer}.task:first-of-type{border-top:0}
+.task input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--ac);flex:none}
+.task.d span{text-decoration:line-through;opacity:.55}
+.tag{font-size:11px;font-weight:700;color:#fff;border-radius:8px;padding:1px 7px;margin-right:6px;white-space:nowrap}
+.ring{width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--ac) calc(var(--p)*1%),var(--ln) 0);display:grid;place-items:center;flex:none}
+.ring span{background:var(--card);width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.stp{display:flex;align-items:center;gap:8px}.stp b{min-width:34px;text-align:center}.stp button{padding:2px 12px;font-size:18px}
+.hr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--ln)}
+.bar{height:10px;background:var(--ln);border-radius:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;border-radius:9px}
+.wd{display:grid;grid-template-columns:62px 1fr 44px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--ln);cursor:pointer}
+details{border-top:1px solid var(--ln);padding:8px 0}summary{cursor:pointer;font-weight:600}
+textarea,select{width:100%;background:var(--bg);border:1px solid var(--ln);border-radius:12px;padding:10px;margin:4px 0 10px}
+ol{padding-left:20px;margin:6px 0}.note{background:var(--bg);border-radius:12px;padding:10px;font-size:14px}
+</style></head><body><main id="app"></main><nav class="tabs" id="tabs"></nav>
+<script>
+const S=new Date(2026,10,20),E=new Date(2027,1,6),WD=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const pad=n=>String(n).padStart(2,'0'),key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const D=k=>{const[a,b,c]=k.split('-').map(Number);return new Date(a,b-1,c)};
+const A=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const diff=(a,b)=>Math.round((a-b)/864e5),fmt=d=>pad(d.getDate())+'/'+pad(d.getMonth()+1);
+const G={L:['Loja','--L'],I:['Instagram','--I'],P:['Pós','--P'],R:['Revisão','--R']};
+// ---------- Geração do plano ----------
+const LIGHT=['2026-12-24','2026-12-25','2026-12-31','2027-01-01'];
+const PROD=['pesquisa e referências','esboço no sketchbook','arte digital (v1)','arte digital (ajustes)','mockup e ficha do produto','exportar arquivos finais','revisão e marcar como pronto'];
+function loja(d){const k=key(d);
+ if(k==='2026-11-26')return 'Fazer a encomenda na gráfica (mail club) com as artes conferidas';
+ if(k==='2027-01-31')return 'Fechar a loja: checklist dos 10 produtos prontos ✔';
+ if(k<'2026-11-26')return ['Listar os 10 produtos (nome, formato, preço-alvo)','Revisar os 2 rascunhos e decidir o que falta','Definir identidade da loja (paleta, tipografia, embalagem)','Organizar artes para a gráfica (tamanho, sangria, CMYK)','Conferir arquivos antes do pedido'][diff(d,S)%5];
+ if(k<'2026-12-01')return 'Finalizar o rascunho '+(k<'2026-11-29'?'1':'2')+' → produto '+(k<'2026-11-29'?'1':'2')+' pronto';
+ if(k<'2027-01-26'){const o=diff(d,new Date(2026,11,1));return 'Produto '+(Math.floor(o/7)+3)+': '+PROD[o%7]}
+ if(k<'2027-02-01')return ['Revisar todos os produtos (erros, consistência)','Fotos e mockups de apresentação','Descrições e preços finais','Organizar arquivos e estoque'][diff(d,new Date(2027,0,26))%4];
+ return ['Conferir produção/embalagem do mail club','Montar vitrine/página da loja','Plano de lançamento (drop ou pronta entrega)','Testar fluxo de compra e envio','Ajustes finais e data de lançamento','Respirar e revisar o semestre'][diff(d,new Date(2027,1,1))];}
+const IPH=[['2026-12-07',['Definir 3 pilares de conteúdo','Escrever bio, nome e @','Banco de 20 ideias de posts','Definir visual do feed (cores, fontes)','Pesquisar 5 perfis de referência','Montar template de post','Pensar em séries recorrentes']],
+ ['2026-12-21',['Roteiro + legenda de um post','Arte do post no template','Legenda e hashtags','Produzir um carrossel','Revisar posts prontos']]];
+const IW={0:'Rever o que funcionou e ajustar o plano de posts',1:'Planejar os 2 posts da semana e produzir o post A',3:'Publicar o post A + produzir o post B',5:'Publicar o post B + interagir 15 min',6:'Interagir e salvar referências de feed'};
+const PPH=[['2026-12-07',['Definir critérios (área, modalidade, custo, horário que cabe na rotina)','Listar 10 pós possíveis','Pesquisar prazos de inscrição e editais','Comparar custo, grade e modalidade']],
+ ['2027-01-01',['Pesquisar a fundo as opções da lista','Preencher tabela comparativa','Ver documentos exigidos e prazos','Fechar o top 3 e contatar secretarias']],
+ ['2027-01-18',['Decidir a pós escolhida (top 3 → 1)','Tirar dúvidas finais com a secretaria','Preparar documentação (e carta/projeto, se exigido)','Iniciar inscrição/processo seletivo']],
+ ['2027-02-01',['Decidir a pós escolhida (top 3 → 1)','Preparar documentação','Iniciar inscrição/processo seletivo','Conferir valores e forma de pagamento']]];
+const PLAN={},cI={},cP={};
+for(let d=new Date(S);d<=E;d=A(d,1)){const k=key(d),w=d.getDay(),it=[],L=LIGHT.includes(k);
+ const push=(g,h,t)=>it.push({id:k+g,g,h,t});
+ let l=w==0?1.5:2,i=[1,3,5,6,0].includes(w)?1:0,p=[2,4,6,0].includes(w)?1:0,r=w==0?.5:0;
+ if(k>='2027-02-01'){l=1;p=2}
+ if(L){l=1;i=p=r=0}
+ push('L',l,loja(d));
+ if(i){let t;if(k<'2026-12-21'){const j=k<'2026-12-07'?0:1;cI[j]=(cI[j]||0)+1;t=IPH[j][1][(cI[j]-1)%IPH[j][1].length]}else t=IW[w];push('I',i,t)}
+ if(p){let t;if(k==='2027-02-06')t='Matrícula confirmada ✅ (guardar comprovante)';
+  else if(k>='2027-02-01'){t=['Confirmar prazo final de matrícula e documentos','Enviar documentos e inscrição','Pagar taxa/mensalidade ou confirmar bolsa','Acompanhar e-mails da secretaria','Resolver pendências da matrícula'][diff(d,new Date(2027,1,1))]}
+  else{let j=0;PPH.forEach((x,n)=>{if(k>=x[0])j=n});if(k>='2027-01-18'&&k<'2027-02-01')j=2;if(k>='2027-01-01'&&k<'2027-01-18')j=1;if(k<'2027-01-01'&&k>='2026-12-07')j=0;
+   const ph=k<'2026-12-07'?-1:j;if(ph<0){cP.x=(cP.x||0)+1;t=['Definir critérios da pós (área, modalidade, custo)','Listar 10 pós possíveis','Pesquisar prazos de inscrição e editais'][(cP.x-1)%3]}else{cP[ph]=(cP[ph]||0)+1;t=PPH[ph][1][(cP[ph]-1)%4]}}
+  push('P',p,t)}
+ if(r)push('R',r,'Revisão semanal (20–30 min) — veja a aba Revisão');
+ PLAN[k]=it}
+// ---------- Estado ----------
+let st={done:{},hab:{},prod:2,pos:0,posts:{},rev:{}};
+try{Object.assign(st,JSON.parse(localStorage.getItem('planner-meri-v1')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('planner-meri-v1',JSON.stringify(st))}catch(e){}};
+const POS=['Procurando','Lista pronta','Top 3','Escolhida','Inscrita','Matriculada'];
+let tn=new Date();tn=new Date(tn.getFullYear(),tn.getMonth(),tn.getDate());
+let cur=key(tn<S?S:tn>E?E:tn),view='hoje';
+// ---------- Cálculos ----------
+const T=k=>PLAN[k]||[],pl=k=>T(k).reduce((a,x)=>a+x.h,0);
+const pct=k=>T(k).length?T(k).filter(x=>st.done[x.id]).length/T(k).length:0;
+const togs=k=>{const w=D(k).getDay();return w>0&&w<6?[['sk','Rascunhei no sketchbook de manhã'],['fr','Freela antes da loja'],['pl','Planner atualizado']]:[['pl','Planner atualizado'],['de','Um tempo de descanso de verdade']]};
+const score=k=>{const h=st.hab[k]||{},t=togs(k);return Math.round(Math.min((h.f||0)/(pl(k)||1),1)*50+pct(k)*30+t.filter(x=>h[x[0]]).length/t.length*20)};
+const wk=k=>key(A(D(k),-((D(k).getDay()+6)%7)));
+const wdays=k=>{const m=D(wk(k));return[0,1,2,3,4,5,6].map(i=>key(A(m,i))).filter(x=>x>=key(S)&&x<=key(E))};
+function wstat(k){const ds=wdays(k),tt=ds.flatMap(T),dn=tt.filter(x=>st.done[x.id]).length;
+ return{f:ds.reduce((a,x)=>a+((st.hab[x]||{}).f||0),0),p:tt.length?Math.round(dn/tt.length*100):0,i:ds.reduce((a,x)=>a+((st.hab[x]||{}).int||0),0),s:Math.round(ds.reduce((a,x)=>a+score(x),0)/(ds.length||1)),dn,n:tt.length}}
+const gp=g=>{const a=Object.values(PLAN).flat().filter(x=>x.g===g);return{n:a.length,d:a.filter(x=>st.done[x.id]).length}};
+// ---------- Visual ----------
+const tag=g=>`<span class="tag" style="background:var(${G[g][1]})">${G[g][0]}</span>`;
+const row=x=>`<label class="task ${st.done[x.id]?'d':''}"><input type="checkbox" data-a="t" data-v="${x.id}" ${st.done[x.id]?'checked':''}><span>${tag(x.g)}${x.t} <small style="display:inline">· ${x.h}h</small></span></label>`;
+const stp=(k,f,lb,mn,mx,sd)=>{const v=(st.hab[k]||{})[f]??(f==='en'?3:0);return`<div class="hr"><span>${lb}</span><div class="stp"><button data-a="h" data-k="${k}" data-f="${f}" data-v="${-sd}" data-mn="${mn}" data-mx="${mx}">−</button><b>${v}</b><button data-a="h" data-k="${k}" data-f="${f}" data-v="${sd}" data-mn="${mn}" data-mx="${mx}">+</button></div></div>`};
+const bar=(p,c)=>`<div class="bar"><i style="width:${Math.min(100,p)}%;background:var(${c})"></i></div>`;
+const rot=d=>LIGHT.includes(key(d))?'Dia leve (feriado): só 1h, sem culpa':d.getDay()>0&&d.getDay()<6?'7h–15h/16h cuidados (sketchbook) · depois freela · depois loja':'Manhã ocupada · tarde livre para os objetivos';
+function vHoje(){const k=cur,d=D(k),h=st.hab[k]||{},sc=score(k);
+ return`<div class="nav"><button data-a="d" data-v="-1">‹</button><div><b>${WD[d.getDay()]}, ${fmt(d)}/${d.getFullYear()}</b><small>${rot(d)}</small></div><button data-a="d" data-v="1">›</button></div>
+ <div class="card row"><div class="ring" style="--p:${sc}"><span>${sc}%</span></div><div><b>Pontuação do dia</b><small>foco 50% · tarefas 30% · hábitos 20%</small></div></div>
+ <div class="card"><h3>Tarefas · ${pl(k)}h planejadas</h3>${T(k).map(row).join('')}</div>
+ <div class="card"><h3>Hábitos que medem progresso</h3>${stp(k,'f','Horas focadas nos objetivos',0,6,.5)}${stp(k,'en','Energia da tarde (1–5)',1,5,1)}${stp(k,'int','Interrupções que me tiraram do foco',0,20,1)}
+ ${togs(k).map(x=>`<label class="hr" style="cursor:pointer"><span>${x[1]}</span><input type="checkbox" data-a="ht" data-k="${k}" data-f="${x[0]}" ${h[x[0]]?'checked':''} style="width:22px;height:22px;accent-color:var(--ac)"></label>`).join('')}</div>
+ ${k===cur&&tn&&key(tn)!==k?'<button data-a="today" style="width:100%">Ir para hoje</button>':''}`}
+function vSemana(){const ds=wdays(cur),s=wstat(cur),m=D(wk(cur)),w=wk(cur);
+ return`<div class="nav"><button data-a="w" data-v="-7">‹</button><div><b>Semana de ${fmt(m)}</b><small>${s.dn}/${s.n} tarefas · ${s.f}h focadas · ${s.i} interrupções</small></div><button data-a="w" data-v="7">›</button></div>
+ <div class="card">${ds.map(x=>{const d=D(x);return`<div class="wd" data-a="go" data-v="${x}"><b>${WD[d.getDay()]} ${fmt(d)}</b><div>${[...new Set(T(x).map(t=>t.g))].map(tag).join('')}${bar(pct(x)*100,'--ac')}</div><b>${score(x)}%</b></div>`}).join('')}</div>
+ <div class="card"><h3>Instagram: posts planejados nesta semana (meta 2)</h3><div class="stp"><button data-a="posts" data-v="-1">−</button><b>${st.posts[w]||0}</b><button data-a="posts" data-v="1">+</button></div>${bar((st.posts[w]||0)*50,'--I')}</div>
+ <div class="note">Modelo semanal: domingo = revisão + escolher 3 prioridades · seg/qua/sex = Instagram · ter/qui = pós · todos os dias = loja (2h). Carga máxima de 3h nos dias úteis e 4h nos fins de semana.</div>`}
+function vPlano(){const ws=[...new Set(Object.keys(PLAN).map(wk))];
+ return ws.map(w=>{const ds=wdays(w),s=wstat(w);return`<details ${w===wk(cur)?'open':''}><summary>Semana de ${fmt(D(w))} · ${s.p}%</summary>${ds.map(x=>`<div style="margin:8px 0 2px"><b>${WD[D(x).getDay()]} ${fmt(D(x))}</b> <small style="display:inline">${pl(x)}h</small></div>${T(x).map(row).join('')}`).join('')}</details>`}).join('')}
+function vProg(){const l=gp('L'),i=gp('I'),p=gp('P'),pw=Object.values(st.posts).reduce((a,b)=>a+b,0);let sr=0;for(let d=new Date(tn>E?E:tn<S?S:tn);d>=S;d=A(d,-1)){if(((st.hab[key(d)]||{}).f||0)>=2)sr++;else break}
+ const pc=o=>o.n?Math.round(o.d/o.n*100):0;
+ return`<div class="card row sp"><div><b>${Math.max(0,diff(E,tn))} dias</b><small>até 06/02/2027</small></div><div><b>${sr} 🔥</b><small>dias seguidos com 2h+ de foco</small></div></div>
+ <div class="card"><h3>1 · Loja: ${st.prod}/10 produtos</h3><div class="stp"><button data-a="prod" data-v="-1">−</button><b>${st.prod}</b><button data-a="prod" data-v="1">+</button></div>${bar(st.prod*10,'--L')}<small>Tarefas feitas: ${pc(l)}% · prazo: janeiro</small></div>
+ <div class="card"><h3>2 · Instagram: ${pw} posts planejados</h3>${bar(pw/14*100,'--I')}<small>Meta: 2 por semana (≈14 até o fim) · tarefas ${pc(i)}% · começar a postar até 31/12</small></div>
+ <div class="card"><h3>3 · Pós: ${POS[st.pos]}</h3><select data-a="pos">${POS.map((x,n)=>`<option value="${n}" ${n===st.pos?'selected':''}>${x}</option>`).join('')}</select>${bar(st.pos*20,'--P')}<small>Tarefas feitas: ${pc(p)}% · prazo: fevereiro</small></div>
+ <div class="card"><h3>Backup do progresso</h3><small style="margin-bottom:8px">Guarde um arquivo de vez em quando ou use para trocar de aparelho.</small><div class="row"><button data-a="exp">Exportar</button><label><span class="btn" style="display:inline-block;background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:8px 14px;cursor:pointer">Importar</span><input type="file" accept=".json" data-a="imp" hidden></label></div></div>`}
+function vRev(){const w=wk(cur),s=wstat(cur),r=st.rev[w]||{},f=(n,lb)=>`<label>${lb}<textarea rows="2" data-a="rev" data-f="${n}">${r[n]||''}</textarea></label>`;
+ return`<div class="nav"><button data-a="w" data-v="-7">‹</button><div><b>Revisão · semana de ${fmt(D(w))}</b><small>${s.p}% das tarefas · ${s.f}h focadas · pontuação média ${s.s}%</small></div><button data-a="w" data-v="7">›</button></div>
+ <div class="card"><h3>Roteiro de 20 minutos (domingo)</h3><ol><li>Olhe os números acima (3 min).</li><li>Marque o que andou e o que travou (5 min).</li><li>Reprograme as pendências no planner, sem acumular (5 min).</li><li>Escolha 3 prioridades da próxima semana (5 min).</li><li>Ajuste a carga: leve, ok ou pesada (2 min).</li></ol></div>
+ <div class="card">${f('a','O que andou bem?')}${f('b','O que travou? (interrupções, energia, manhã…)')}${f('c','3 prioridades da próxima semana')}<label>Carga da semana<select data-a="rev" data-f="d">${['','Leve demais','Ok','Pesada demais'].map(x=>`<option ${r.d===x?'selected':''}>${x}</option>`).join('')}</select></label></div>`}
+const V={hoje:['Hoje',vHoje],semana:['Semana',vSemana],plano:['Plano',vPlano],prog:['Progresso',vProg],rev:['Revisão',vRev]};
+function render(){const y=window.scrollY;document.getElementById('app').innerHTML=`<h1>Planner da Meri</h1><small>20/11/2026 → 06/02/2027 · loja, Instagram e pós</small>`+V[view][1]();
+ document.getElementById('tabs').innerHTML=Object.entries(V).map(([k,v])=>`<button data-a="tab" data-v="${k}" class="${k===view?'on':''}">${v[0]}</button>`).join('');window.scrollTo(0,y)}
+const clamp=k=>k<key(S)?key(S):k>key(E)?key(E):k;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.matches('textarea,select'))return;const a=b.dataset.a,v=b.dataset.v;
+ if(a==='tab')view=v;else if(a==='d'||a==='w')cur=clamp(key(A(D(cur),+v)));else if(a==='go'){cur=v;view='hoje'}else if(a==='today')cur=clamp(key(tn));
+ else if(a==='prod')st.prod=Math.max(0,Math.min(10,st.prod+ +v));else if(a==='posts'){const w=wk(cur);st.posts[w]=Math.max(0,(st.posts[w]||0)+ +v)}
+ else if(a==='h'){const h=st.hab[b.dataset.k]=st.hab[b.dataset.k]||{},f=b.dataset.f,c=h[f]??(f==='en'?3:0);h[f]=Math.max(+b.dataset.mn,Math.min(+b.dataset.mx,c+ +v))}
+ else if(a==='t'){st.done[v]=!st.done[v]}else if(a==='ht'){const h=st.hab[b.dataset.k]=st.hab[b.dataset.k]||{};h[b.dataset.f]=!h[b.dataset.f]}else if(a==='exp'){exportar();return}else return;
+ save();render()});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.a==='imp'){importar(t.files[0]);t.value='';return}if(t.dataset.a==='pos'){st.pos=+t.value;save();render()}else if(t.dataset.a==='rev'&&t.tagName==='SELECT'){const w=wk(cur);(st.rev[w]=st.rev[w]||{})[t.dataset.f]=t.value;save()}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.a==='rev'&&t.tagName==='TEXTAREA'){const w=wk(cur);(st.rev[w]=st.rev[w]||{})[t.dataset.f]=t.value;save()}});
+function exportar(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(st)],{type:'application/json'}));a.download='planner-meri-'+key(tn)+'.json';document.body.appendChild(a);a.click();a.remove()}
+function importar(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(typeof o!=='object'||!o.done)throw 0;if(!confirm('Substituir o progresso atual pelo do arquivo?'))return;st=Object.assign({done:{},hab:{},prod:2,pos:0,posts:{},rev:{}},o);save();render()}catch(e){alert('Arquivo inválido.')}};r.readAsText(f)}
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+render();
+</script></body></html>
